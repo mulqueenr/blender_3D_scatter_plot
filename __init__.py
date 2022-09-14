@@ -15,7 +15,7 @@ import bpy
 import math
 import time
 import bmesh
-from . import 3d_scatter_utils
+from . import 3d_scatterplot_utils
 
 #Read in file and store it in memory (this doesn't take up much memory)
 file_xyz=open("C:/Users/mulqueen/Desktop/hg38_3d.umap.tsv","r") #change path to whatever filepath you want. I got my computer refurbished and it was named Chad. I swear it wasn't me.
