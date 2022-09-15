@@ -125,7 +125,7 @@ def run_3dscatterplot(
   file_out_dir="/Users/rmulqueen/Documents/Blender/tmp",
   file_out_name="test"):
   #Read in file and store it in memory (this doesn't take up much memory)
-  file_xyz=open(file_in,"r") #change path to whatever filepath you want. I got my computer refurbished and it was named Chad. I swear it wasn't me.
+  file_xyz=open(file_in,"r") 
   tabraw=file_xyz.readlines()[0:]
   data_count=len(tabraw)
   file_xyz.close()
