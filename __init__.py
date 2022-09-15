@@ -1,7 +1,7 @@
 bl_info = {
     "name": "3D Scatter Plots",
-    "author": "Ryan Mulqueen",
-    "version": (0, 1),
+    "author": "Ryan Mulqueen <RMulqueen@mdanderson.org",
+    "version": (0, 2),
     "blender": (3, 2, 2),
     "location": "View3D",
     "description": "Adds a menu to upload points for a easy-to-initiate 3D Scatter Plot.",
@@ -10,38 +10,26 @@ bl_info = {
     "category": "Mesh",
 }
 
+####I think maybe change the prop names? And try with all the functions in the same file??
 #1. import modules
 import bpy
 import math
 import time
 import bmesh
-from .3d_scatterplot_utils import *
-import os, sys
+from .utils.scatterplot_utils import *
 
+import os, sys
 
 class MESH_OT_3D_SCATTERPLOT(bpy.types.Operator):
     """Build out DNA molecules"""
     bl_idname="mesh.3d_scatterplot"
     bl_label="3D Scatterplot"
     bl_options={'REGISTER','UNDO'}
-
-    filepath_3dfile: bpy.props.StringProperty(
-        name="File input:",
-        subtype='FILE_PATH',
-    )
-    fileout_dir: bpy.props.StringProperty(
-        name="Path for output:",
-        subtype='FILE_PATH',
-    )
-    file_name_out: bpy.props.StringProperty(
-        name="File Output Name",
-    )
-
     def excecute(self,context):
-        run_3dscatterplot(file_in=self.filepath_3dfile,
-          file_out_dir=self.fileout_dir,
-          file_out_name=self.file_name_out)
-        
+        props=context.scene
+        run_3dscatterplot(file_in=props.filepath_3dfile,
+          file_out_dir=props.fileout_dir,
+          file_out_name=props.file_name_out)  
         return {'FINISHED'}
 
 
@@ -53,19 +41,47 @@ class VIEW3D_PT_3D_SCATTERPLOT(bpy.types.Panel):
     bl_label="Add Scatterplot"
 
     def draw(self,context):
-        self.layout.operator('mesh.3d_scatterplot')
-        pass
+        layout = self.layout
+        obj =  context.active_object
+        #Initial default option for messing with gDNA
+        col = layout.row()
+        for prop_name in ["filepath_3dfile","fileout_dir","file_name_out"]:
+            col = layout.row()
+            col.prop(context.scene, prop_name)
+        col =layout.row()
+        col.operator('mesh.3d_scatterplot',
+            text="3D Plot",
+            icon="RNA")
+
+PROPS = [
+    ("filepath_3dfile",bpy.props.StringProperty(
+        name="File input",
+        subtype='FILE_PATH')),
+    ("fileout_dir",bpy.props.StringProperty(
+        name="Path for output",
+        subtype='FILE_PATH')),
+    ("file_name_out",bpy.props.StringProperty(
+        name="Output file prefix"))
+]
+
+CLASSES = [
+    MESH_OT_3D_SCATTERPLOT,
+    VIEW3D_PT_3D_SCATTERPLOT
+]
 
 
 def register():
-    print("Registered DNA Builder")
-    bpy.utils.register_class(MESH_OT_3d_scatterplot)
-    bpy.utils.register_class(VIEW3D_PT_3d_scatterplot)
+    for cls in CLASSES:
+        bpy.utils.register_class(cls)
+    for (prop_name, prop_value) in PROPS:
+        setattr(bpy.types.Scene, prop_name, prop_value)
 
 def unregister():
-    print("Unregistered DNA Builder")
-    bpy.utils.unregister_class(MESH_OT_3d_scatterplot)
-    bpy.utils.unregister_class(VIEW3D_PT_3d_scatterplot)
+    for cls in CLASSES:
+        bpy.utils.unregister_class(cls)
+    for (prop_name, prop_value) in PROPS:
+        delattr(bpy.types.Scene, prop_name)
+
 
 
 

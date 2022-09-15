@@ -117,6 +117,7 @@ def add_data_point(input_dat):
   my_new_obj.hide_render=False
   bpy.data.collections[clust].objects.link(my_new_obj)
 
+
 def run_3dscatterplot(file_in="",
   file_out_dir="",
   file_out_name=""):
