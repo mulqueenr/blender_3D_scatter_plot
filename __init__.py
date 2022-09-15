@@ -17,8 +17,18 @@ import math
 import time
 import bmesh
 from .utils.scatterplot_utils import *
-
 import os, sys
+
+PROPS = [
+    ("filepath_3dfile",bpy.props.StringProperty(
+        name="File input",
+        subtype='FILE_PATH')),
+    ("fileout_dir",bpy.props.StringProperty(
+        name="Path for output",
+        subtype='FILE_PATH')),
+    ("file_name_out",bpy.props.StringProperty(
+        name="Output file prefix"))
+]
 
 class MESH_OT_3D_SCATTERPLOT(bpy.types.Operator):
     """Build out DNA molecules"""
@@ -53,16 +63,7 @@ class VIEW3D_PT_3D_SCATTERPLOT(bpy.types.Panel):
             text="3D Plot",
             icon="RNA")
 
-PROPS = [
-    ("filepath_3dfile",bpy.props.StringProperty(
-        name="File input",
-        subtype='FILE_PATH')),
-    ("fileout_dir",bpy.props.StringProperty(
-        name="Path for output",
-        subtype='FILE_PATH')),
-    ("file_name_out",bpy.props.StringProperty(
-        name="Output file prefix"))
-]
+
 
 CLASSES = [
     MESH_OT_3D_SCATTERPLOT,

@@ -5,7 +5,10 @@ import time
 import bmesh
 
 #Utilities for 3D Scatter Plot Making
-def make_master_shader():
+def make_master_sphere_and_shader():
+  #initialize an object, a sphere, for our data points.
+  bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05,segments=64, ring_count=32) #higher segments and ring_counts will make a smoother sphere, but I dont think its necessary
+  obj=bpy.context.active_object #select the sphere we just made
   """Set up master shader (named mymat) to be used on all data points."""
   #set up a master shader material
   mat = bpy.data.materials.new(name='mymat')
@@ -63,7 +66,6 @@ def set_render_and_scene():
   """Automate setting up high quality render and scene."""
   #set up render engine and scene
   bpy.context.scene.render.engine="CYCLES" #set render engine to CYCLES
-  bpy.data.scenes["Scene"].cycles.denoiser="NLM" #set denoiser for render
   bpy.data.scenes["Scene"].cycles.samples=512 #this is a whole lotta sampling
   bpy.context.scene.render.image_settings.color_depth = '16' #more color channels!
   bpy.context.scene.render.resolution_x = 3840 #up the resolution
@@ -118,18 +120,16 @@ def add_data_point(input_dat):
   bpy.data.collections[clust].objects.link(my_new_obj)
 
 
-def run_3dscatterplot(file_in="",
-  file_out_dir="",
-  file_out_name=""):
+def run_3dscatterplot(
+  file_in="/Users/rmulqueen/Documents/GitHub/scatterplot_3d/test_data/test.tsv",
+  file_out_dir="/Users/rmulqueen/Documents/Blender/tmp",
+  file_out_name="test"):
   #Read in file and store it in memory (this doesn't take up much memory)
   file_xyz=open(file_in,"r") #change path to whatever filepath you want. I got my computer refurbished and it was named Chad. I swear it wasn't me.
-  tabraw=file_xyz.readlines()[1:]
+  tabraw=file_xyz.readlines()[0:]
   data_count=len(tabraw)
   file_xyz.close()
-  #initialize an object, a sphere, for our data points.
-  bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05,segments=64, ring_count=32) #higher segments and ring_counts will make a smoother sphere, but I dont think its necessary
-  obj=bpy.context.active_object #select the sphere we just made
-  make_master_shader()   #set up a master shader material
+  make_master_sphere_and_shader() #initialize a master sphere and shader to modify per collection
   set_render_and_scene()   #set up render engine and scene
   set_up_stage()   #set up stage by cutting up the default cube vertices and smoothing it
   set_camera()  #move the camera and rotate
@@ -149,8 +149,10 @@ def run_3dscatterplot(file_in="",
       b=float(rgb[2])/255
       clust=str(l[0])
       annot[clust]=[r,g,b]
+
   end = time.time()
   print(end - start)
+
   #make a custom material shader for each annotation (just changing color)
   #this copies the material shader we set up earlier, and then changes the input color
   master_mat=source_mat = bpy.data.materials["mymat"]
@@ -160,8 +162,8 @@ def run_3dscatterplot(file_in="",
     bpy.data.materials[i].node_tree.nodes["RGB"].outputs[0].default_value[0]=annot[i][0]
     bpy.data.materials[i].node_tree.nodes["RGB"].outputs[0].default_value[1]=annot[i][1]
     bpy.data.materials[i].node_tree.nodes["RGB"].outputs[0].default_value[2]=annot[i][2]
-  #make a custom collection for each annotation. this makes a "master sphere" to link for each cluster also
-  for i in annot.keys():
+
+  for i in annot.keys(): #make a custom collection for each annotation. this makes a "master sphere" to link for each cluster also
     collection = bpy.data.collections.new(i) #make new collection
     bpy.context.scene.collection.children.link(collection) #link new collection
     mat = bpy.data.materials.get(i) #set material properties of collection
@@ -172,10 +174,11 @@ def run_3dscatterplot(file_in="",
     new_obj.data.materials.append(mat) #add material
     bpy.data.objects[name].hide_render = True # hide masters
     bpy.data.objects[name].hide_viewport=True
-  #make a dictionary look up for copying master spheres
-  master_sphere={}
+
+  master_sphere={} #make a dictionary look up for copying master spheres
   for i in annot.keys():
     master_sphere[i]=scene.objects.get(i+"_master").data
+
   n=1000 #number of data points to generate per report 
   in_list = [tabraw[i * n:(i + 1) * n] for i in range((len(tabraw) + n + 1) // n )] 
   for in_dat_list in in_list:
@@ -183,6 +186,6 @@ def run_3dscatterplot(file_in="",
     out=[add_data_point(in_dat) for in_dat in in_dat_list] 
     end = time.time()
     print(end - start)
+
   bpy.ops.wm.save_as_mainfile(filepath=file_out_dir+"/"+file_out_name+".blend") #save blender file
-  bpy.context.scene.render.filepath = file_out_name+'.png'
-  bpy.ops.render.render(write_still=True) #render and save file
+  bpy.context.scene.render.filepath = file_out_dir+"/"+file_out_name+'.png'
