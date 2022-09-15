@@ -15,7 +15,7 @@ import bpy
 import math
 import time
 import bmesh
-from .utils.scatterplot_utils import *
+from .utils import scatterplot_utils
 import os, sys
 
 PROPS = [
