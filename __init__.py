@@ -52,10 +52,15 @@ class VIEW3D_PT_3D_SCATTERPLOT(bpy.types.Panel):
 
     def draw(self,context):
         layout = self.layout
-        obj =  context.active_object
         #Initial default option for messing with gDNA
         col = layout.row()
-        for prop_name in ["filepath_3dfile","fileout_dir","file_name_out"]:
+        layout.label(text="Input")
+        for prop_name in ["filepath_3dfile"]:
+            col = layout.row()
+            col.prop(context.scene, prop_name)
+        col = layout.row()
+        layout.label(text="Output")
+        for prop_name in ["fileout_dir","file_name_out"]:
             col = layout.row()
             col.prop(context.scene, prop_name)
         col =layout.row()
