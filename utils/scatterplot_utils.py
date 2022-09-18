@@ -4,8 +4,13 @@ import math
 import time
 import bmesh
 import os, sys
+import addon_utils
+
+addon_path=[mod.__file__ for mod in addon_utils.modules() if "blender_3D_scatter_plot" in mod.__file__] #get a list of all add-ons and return this one
+test_data_path = addon_path[0].replace("__init__.py","test_data/test.tsv") #replace init file with test data directory and file
 
 def make_master_sphere_and_shader():
+    """Generate a master object and shader to manipulate and parent for data points."""
     #initialize an object, a sphere, for our data points.
     if "Sphere" not in [i.name for i in list(bpy.data.objects)]:
         bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05,segments=64, ring_count=32) #higher segments and ring_counts will make a smoother sphere, but I dont think its necessary
@@ -128,6 +133,7 @@ def run_3dscatterplot(
     file_in,
     file_out_dir,
     file_out_name):
+    """This is the main function, which wraps all others. Reads in file, assigns space based on file data, and assigns a material per cluster"""
     #Read in file and store it in memory (this doesn't take up much memory)
     file_xyz=open(file_in,"r") 
     tabraw=file_xyz.readlines()[0:]

@@ -31,14 +31,14 @@ PROPS = [
     ("filepath_3dfile",bpy.props.StringProperty(
         name="File input",
         subtype='FILE_PATH',
-        default=test_data_path)),
+        default=test_data_path)), #Path to TSV file. See README for TSV layout.
     ("fileout_dir",bpy.props.StringProperty(
         name="Path for output",
         subtype='FILE_PATH',
-        default="/Users/rmulqueen/Desktop/")),
+        default="//")), #Path to output directory.
     ("file_name_out",bpy.props.StringProperty(
         name="Output file prefix",
-        default="test"))
+        default="test")) #Output blend and render file prefix.
 ]
 
 #4. Classes
@@ -56,7 +56,7 @@ class MESH_OT_3d_scatterplot(bpy.types.Operator):
 
 
 class VIEW3D_PT_3d_scatterplot(bpy.types.Panel):
-    """Panel for DNA Molecule Builder"""
+    """Panel for 3D Scatter Plot."""
     bl_space_type="VIEW_3D"
     bl_region_type="UI"
     bl_category="3D Scatterplot"
