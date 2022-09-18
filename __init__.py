@@ -16,8 +16,9 @@ import math
 import time
 import bmesh
 import os, sys
+import addon_utils
 
-addon_path=[mod.__file__ for mod_name in bpy.context.preferences.addons.keys() if "blender_3D_scatter_plot" in mod_name]
+addon_path=[mod.__file__ for mod in addon_utils.modules() if "blender_3D_scatter_plot" in mod.__file__]
 test_data_path = addon_path[0].replace("__init__.py","test_data/test.tsv") 
 
 #2. Utilities for 3D Scatter Plot Making
