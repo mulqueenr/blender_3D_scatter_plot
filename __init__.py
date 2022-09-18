@@ -17,6 +17,9 @@ import time
 import bmesh
 import os, sys
 
+addon_path=[mod.__file__ for mod_name in bpy.context.preferences.addons.keys() if "blender_3D_scatter_plot" in mod_name]
+test_data_path = addon_path[0].replace("__init__.py","test_data/test.tsv") 
+
 #2. Utilities for 3D Scatter Plot Making
 #Update in future for readability. Move functions to new folder
 #from .utils import scatterplot_utils
@@ -211,7 +214,7 @@ PROPS = [
     ("filepath_3dfile",bpy.props.StringProperty(
         name="File input",
         subtype='FILE_PATH',
-        default="//test_data/test.tsv")),
+        default=test_data_path)),
     ("fileout_dir",bpy.props.StringProperty(
         name="Path for output",
         subtype='FILE_PATH',
