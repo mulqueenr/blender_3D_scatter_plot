@@ -3,64 +3,65 @@ import bpy
 import math
 import time
 import bmesh
+import os, sys
 
-
-#Utilities for 3D Scatter Plot Making
 def make_master_sphere_and_shader():
-  #initialize an object, a sphere, for our data points.
-  bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05,segments=64, ring_count=32) #higher segments and ring_counts will make a smoother sphere, but I dont think its necessary
-  obj=bpy.context.active_object #select the sphere we just made
-  """Set up master shader (named mymat) to be used on all data points."""
-  #set up a master shader material
-  mat = bpy.data.materials.new(name='mymat')
-  mat.use_nodes = True #use node trees, these can be seen by switching a panel to the shader editor if you want. It will look like the above shader, just not nicely placed.
-  mat_nodes = mat.node_tree.nodes
-  mat_links = mat.node_tree.links
-  mat = bpy.data.materials['mymat'] #Get the material you want 
-  node_to_delete =  mat.node_tree.nodes['Principled BSDF'] #Get the node in its node tree (replace the name below)
-  mat.node_tree.nodes.remove( node_to_delete ) #Remove it
-  #add all the nodes, using col_node as variable of each node as it is being made. then using that to modify default value fields
-  col_node=mat_nodes.new('ShaderNodeRGB')
-  col_node=mat_nodes.new('ShaderNodeFresnel')
-  bpy.data.materials["mymat"].node_tree.nodes['Fresnel'].inputs[0].default_value = 1.33
-  col_node=mat_nodes.new('ShaderNodeHueSaturation')
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value"].inputs[0].default_value = 1
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value"].inputs[1].default_value = 0.7
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value"].inputs[2].default_value = 2
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value"].inputs[3].default_value = 0
-  col_node=mat_nodes.new('ShaderNodeMath')
-  bpy.data.materials["mymat"].node_tree.nodes["Math"].operation = 'MULTIPLY'
-  col_node=mat_nodes.new('ShaderNodeBsdfRefraction')
-  bpy.data.materials["mymat"].node_tree.nodes["Refraction BSDF"].inputs[1].default_value = 1
-  col_node=mat_nodes.new('ShaderNodeBsdfGlossy')
-  bpy.data.materials["mymat"].node_tree.nodes["Glossy BSDF"].inputs[1].default_value = 1
-  col_node=mat_nodes.new('ShaderNodeHueSaturation')
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value.001"].inputs[0].default_value = 1
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value.001"].inputs[1].default_value = 0.4
-  bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value.001"].inputs[2].default_value = 2
-  col_node=mat_nodes.new('ShaderNodeMixShader')
-  col_node=mat_nodes.new('ShaderNodeVolumeAbsorption')
-  bpy.data.materials["mymat"].node_tree.nodes["Volume Absorption"].inputs[1].default_value = 0.3
-  col_node=mat_nodes.new('ShaderNodeBsdfTranslucent')
-  col_node=mat_nodes.new('ShaderNodeLightPath')
-  col_node=mat_nodes.new('ShaderNodeMixShader')
-  #build node tree links (going from left most inputs)
-  #sorry this is a monstrosity
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes['RGB'].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value"].inputs[4])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes['RGB'].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value.001"].inputs[4])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes['RGB'].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Volume Absorption"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes['Fresnel'].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Math"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes['Hue Saturation Value'].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Refraction BSDF"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes['Hue Saturation Value'].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Glossy BSDF"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Math"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Mix Shader"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Refraction BSDF"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Mix Shader"].inputs[1])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Glossy BSDF"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Mix Shader"].inputs[2])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Hue Saturation Value.001"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Translucent BSDF"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Volume Absorption"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Material Output"].inputs[1])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Translucent BSDF"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Mix Shader.001"].inputs[2])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Mix Shader"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Mix Shader.001"].inputs[1])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Light Path"].outputs[1], bpy.data.materials["mymat"].node_tree.nodes["Mix Shader.001"].inputs[0])
-  mat_links.new(bpy.data.materials["mymat"].node_tree.nodes["Mix Shader.001"].outputs[0], bpy.data.materials["mymat"].node_tree.nodes["Material Output"].inputs[0])
+    #initialize an object, a sphere, for our data points.
+    if "Sphere" not in [i.name for i in list(bpy.data.objects)]:
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05,segments=64, ring_count=32) #higher segments and ring_counts will make a smoother sphere, but I dont think its necessary
+    obj=bpy.data.objects["Sphere"]
+    """Set up master shader (named mymat) to be used on all data points."""
+    #set up a master shader material
+    if "mymat" not in [i.name for i in list(bpy.data.materials)]:
+        bpy.data.materials.new(name='mymat')
+    mat = bpy.data.materials["mymat"]
+    mat.use_nodes = True #use node trees, these can be seen by switching a panel to the shader editor if you want. It will look like the above shader, just not nicely placed.
+    mat_nodes = mat.node_tree.nodes
+    mat_links = mat.node_tree.links
+    node_to_delete =  mat.node_tree.nodes['Principled BSDF'] #Get the node in its node tree (replace the name below)
+    mat.node_tree.nodes.remove( node_to_delete ) #Remove it
+    #add all the nodes, using col_node as variable of each node as it is being made. then using that to modify default value fields
+    col_node=mat_nodes.new('ShaderNodeRGB')
+    col_node=mat_nodes.new('ShaderNodeFresnel')
+    mat.node_tree.nodes['Fresnel'].inputs[0].default_value = 1.33
+    col_node=mat_nodes.new('ShaderNodeHueSaturation')
+    mat.node_tree.nodes["Hue Saturation Value"].inputs[0].default_value = 1
+    mat.node_tree.nodes["Hue Saturation Value"].inputs[1].default_value = 0.7
+    mat.node_tree.nodes["Hue Saturation Value"].inputs[2].default_value = 2
+    mat.node_tree.nodes["Hue Saturation Value"].inputs[3].default_value = 0
+    col_node=mat_nodes.new('ShaderNodeMath')
+    mat.node_tree.nodes["Math"].operation = 'MULTIPLY'
+    col_node=mat_nodes.new('ShaderNodeBsdfRefraction')
+    mat.node_tree.nodes["Refraction BSDF"].inputs[1].default_value = 1
+    col_node=mat_nodes.new('ShaderNodeBsdfGlossy')
+    mat.node_tree.nodes["Glossy BSDF"].inputs[1].default_value = 1
+    col_node=mat_nodes.new('ShaderNodeHueSaturation')
+    mat.node_tree.nodes["Hue Saturation Value.001"].inputs[0].default_value = 1
+    mat.node_tree.nodes["Hue Saturation Value.001"].inputs[1].default_value = 0.4
+    mat.node_tree.nodes["Hue Saturation Value.001"].inputs[2].default_value = 2
+    col_node=mat_nodes.new('ShaderNodeMixShader')
+    col_node=mat_nodes.new('ShaderNodeVolumeAbsorption')
+    mat.node_tree.nodes["Volume Absorption"].inputs[1].default_value = 0.3
+    col_node=mat_nodes.new('ShaderNodeBsdfTranslucent')
+    col_node=mat_nodes.new('ShaderNodeLightPath')
+    col_node=mat_nodes.new('ShaderNodeMixShader')
+    #build node tree links (going from left most inputs)
+    #sorry this is a monstrosity
+    mat_links.new(mat.node_tree.nodes['RGB'].outputs[0], mat.node_tree.nodes["Hue Saturation Value"].inputs[4])
+    mat_links.new(mat.node_tree.nodes['RGB'].outputs[0], mat.node_tree.nodes["Hue Saturation Value.001"].inputs[4])
+    mat_links.new(mat.node_tree.nodes['RGB'].outputs[0], mat.node_tree.nodes["Volume Absorption"].inputs[0])
+    mat_links.new(mat.node_tree.nodes['Fresnel'].outputs[0], mat.node_tree.nodes["Math"].inputs[0])
+    mat_links.new(mat.node_tree.nodes['Hue Saturation Value'].outputs[0], mat.node_tree.nodes["Refraction BSDF"].inputs[0])
+    mat_links.new(mat.node_tree.nodes['Hue Saturation Value'].outputs[0], mat.node_tree.nodes["Glossy BSDF"].inputs[0])
+    mat_links.new(mat.node_tree.nodes["Math"].outputs[0], mat.node_tree.nodes["Mix Shader"].inputs[0])
+    mat_links.new(mat.node_tree.nodes["Refraction BSDF"].outputs[0], mat.node_tree.nodes["Mix Shader"].inputs[1])
+    mat_links.new(mat.node_tree.nodes["Glossy BSDF"].outputs[0], mat.node_tree.nodes["Mix Shader"].inputs[2])
+    mat_links.new(mat.node_tree.nodes["Hue Saturation Value.001"].outputs[0], mat.node_tree.nodes["Translucent BSDF"].inputs[0])
+    mat_links.new(mat.node_tree.nodes["Volume Absorption"].outputs[0], mat.node_tree.nodes["Material Output"].inputs[1])
+    mat_links.new(mat.node_tree.nodes["Translucent BSDF"].outputs[0], mat.node_tree.nodes["Mix Shader.001"].inputs[2])
+    mat_links.new(mat.node_tree.nodes["Mix Shader"].outputs[0], mat.node_tree.nodes["Mix Shader.001"].inputs[1])
+    mat_links.new(mat.node_tree.nodes["Light Path"].outputs[1], mat.node_tree.nodes["Mix Shader.001"].inputs[0])
+    mat_links.new(mat.node_tree.nodes["Mix Shader.001"].outputs[0], mat.node_tree.nodes["Material Output"].inputs[0])
 
   
 def set_render_and_scene():
@@ -79,21 +80,23 @@ def set_render_and_scene():
 
 
 def set_up_stage():
-  """Set up stage by cutting up the default cube vertices and smoothing it."""
-  obj_cube=bpy.data.objects["Cube"]
-  obj_cube.scale=(30,30,30) #scale up the cube
-  #this is to cut out a vertex to make an open box
-  bpy.context.view_layer.objects.active = obj_cube
-  bpy.ops.object.mode_set(mode='EDIT')
-  bpy.ops.mesh.select_mode(type="VERT")  # Switch to edge select mode
-  bm = bmesh.from_edit_mesh(obj_cube.data)  # Create bmesh object for easy mesh evaluation
-  bm.verts.ensure_lookup_table()
-  bm.verts.remove(bm.verts[2]) # Write the mesh back
-  bmesh.update_edit_mesh(obj_cube.data)  # Update the mesh in edit mode
-  bpy.ops.object.mode_set(mode='OBJECT') #switch back to object mode when done
-  bpy.ops.object.modifier_add(type='SUBSURF') #make it smooth
-  bpy.data.objects["Cube"].modifiers["Subdivision"].render_levels=6
-  bpy.data.objects["Cube"].location=(-4,4.3,17.725) #change the location for more dramatic shadows
+    """Set up stage by cutting up the default cube vertices and smoothing it."""
+    if "Cube" not in [i.name for i in list(bpy.data.objects)]:
+        bpy.ops.mesh.prmitive_cube_add()
+    obj_cube=bpy.data.objects["Cube"]
+    obj_cube.scale=(30,30,30) #scale up the cube
+    #this is to cut out a vertex to make an open box
+    bpy.context.view_layer.objects.active = obj_cube
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_mode(type="VERT")  # Switch to edge select mode
+    bm = bmesh.from_edit_mesh(obj_cube.data)  # Create bmesh object for easy mesh evaluation
+    bm.verts.ensure_lookup_table()
+    bm.verts.remove(bm.verts[2]) # Write the mesh back
+    bmesh.update_edit_mesh(obj_cube.data)  # Update the mesh in edit mode
+    bpy.ops.object.mode_set(mode='OBJECT') #switch back to object mode when done
+    bpy.ops.object.modifier_add(type='SUBSURF') #make it smooth
+    bpy.data.objects["Cube"].modifiers["Subdivision"].render_levels=6
+    bpy.data.objects["Cube"].location=(-4,4.3,17.725) #change the location for more dramatic shadows
 
   
 def set_camera():
@@ -102,7 +105,7 @@ def set_camera():
   bpy.data.objects["Camera"].rotation_euler=(1, 0.0, 0.8)
 
 
-def add_data_point(input_dat):
+def add_data_point(input_dat,master_sphere):
   """Copy data points and link them to the master spheres. 
   Also places the copies into nice cluster named collections for easier navigation."""
   line=input_dat
@@ -122,9 +125,9 @@ def add_data_point(input_dat):
 
 
 def run_3dscatterplot(
-    file_in="/Users/rmulqueen/Documents/GitHub/scatterplot_3d/test_data/test.tsv",
-    file_out_dir="/Users/rmulqueen/Documents/Blender/tmp",
-    file_out_name="test"):
+    file_in,
+    file_out_dir,
+    file_out_name):
     #Read in file and store it in memory (this doesn't take up much memory)
     file_xyz=open(file_in,"r") 
     tabraw=file_xyz.readlines()[0:]
@@ -154,6 +157,7 @@ def run_3dscatterplot(
     print(end - start)
     #make a custom material shader for each annotation (just changing color)
     #this copies the material shader we set up earlier, and then changes the input color
+    master_sphere={} #make a dictionary look up for copying master spheres
     master_mat=source_mat = bpy.data.materials["mymat"]
     for i in annot.keys():
         copied_mat = master_mat.copy()
@@ -172,16 +176,15 @@ def run_3dscatterplot(
         new_obj.data.materials.append(mat) #add material
         bpy.data.objects[name].hide_render = True # hide masters
         bpy.data.objects[name].hide_viewport=True
-    master_sphere={} #make a dictionary look up for copying master spheres
     for i in annot.keys():
         master_sphere[i]=scene.objects.get(i+"_master").data
         n=1000 #number of data points to generate per report 
         in_list = [tabraw[i * n:(i + 1) * n] for i in range((len(tabraw) + n + 1) // n )] 
     for in_dat_list in in_list:
         start = time.time()
-        out=[add_data_point(in_dat) for in_dat in in_dat_list] 
+        out=[add_data_point(in_dat,master_sphere=master_sphere) for in_dat in in_dat_list] 
     end = time.time()
     print(end - start)
-    bpy.ops.wm.save_as_mainfile(filepath=file_out_dir+"/"+file_out_name+".blend") #save blender file
-    bpy.context.scene.render.filepath = file_out_dir+"/"+file_out_name+'.png'
+    bpy.ops.wm.save_as_mainfile(filepath=file_out_dir+file_out_name+".blend") #save blender file
+    bpy.context.scene.render.filepath = file_out_dir+file_out_name+'.png'
 
