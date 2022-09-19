@@ -1,4 +1,4 @@
-# blender_3D_scatter_plot
+# 3D Scatterplots for Blender
 
 This package takes in a tab-separated file (tsv) with the following format, and automatically generates a 3D render and blender file.
 
@@ -16,5 +16,15 @@ Astrocytes    ATTCAGAAGCATCGCGCAGCCAGACTCTATGGCCTA    3.60301401455387    -1.964
 Astrocytes    TCAACGAGTTCGCGATGGTCAGAGCCCGCCGATATC    5.51775913941571    -1.87741656898663    -6.76243310557264    #1C7D54
 ```
 
-Blender Module for 3D scatter plots.
+## Installation
+To install perform the following steps.
+
+1. Download and install the latest blender release [here.](https://www.blender.org/download/). 
+2. Download this repository as a zip file.
+3. Open blender. On the top left go to Edit > Preferences > Add-ons > Install.. and select the zip file. Then click the checkbox to activate the module.
+4. To access the 3D Scatterplot menu, in the 3D viewport open the panel.
+5. Use the file path navigator for the input file to select your TSV, or leave the field unaltered to try the test data set.
+6. Set up the output directory and prefix name using the filepath selector and the text box.
+7. Press the button on the panel to run and wait for the data to be loaded in.
+8. The file will automatically save as a .blend file in your [output_dir]/[prefix_name].blend. To render just press F12, make sure you save the image once rendering is complete.
 
