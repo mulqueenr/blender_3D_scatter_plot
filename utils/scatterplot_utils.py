@@ -87,7 +87,7 @@ def set_render_and_scene():
 def set_up_stage():
     """Set up stage by cutting up the default cube vertices and smoothing it."""
     if "Cube" not in [i.name for i in list(bpy.data.objects)]:
-        bpy.ops.mesh.prmitive_cube_add()
+        bpy.ops.mesh.primitive_cube_add()
     obj_cube=bpy.data.objects["Cube"]
     obj_cube.scale=(30,30,30) #scale up the cube
     #this is to cut out a vertex to make an open box
