@@ -11,15 +11,10 @@ import numpy
 addon_path=[mod.__file__ for mod in addon_utils.modules() if "blender_3D_scatter_plot" in mod.__file__] #get a list of all add-ons and return this one
 test_data_path = addon_path[0].replace("__init__.py","test_data/test.tsv") #replace init file with test data directory and file
 
-
-
-
-################################ UPDATED ###################################################################
+################################ UPDATED v0.2 ###################################################################
 
 
 #use this for import https://github.com/simonbroggi/blender_spreadsheet_import/blob/main/__init__.py
-
-  
 def set_camera():
   """Move the camera and rotate."""
   bpy.data.objects["Camera"].location=(40, -40, 38)
@@ -211,127 +206,3 @@ def run_3dscatterplot(
     nodetree.links.new(voroninode.outputs['Distance'], setpositionnode.inputs['Offset']) #link random distance to offset to move points
     nodetree.links.new(setpositionnode.outputs['Geometry'], setmaterialnode.inputs['Geometry']) #link input positions to points
     nodetree.links.new(setmaterialnode.outputs['Geometry'], outNode.inputs['Geometry']) #link input positions to points
-
-
-run_3dscatterplot(file_in="/Users/rmulqueen/Library/Application Support/Blender/3.4/scripts/addons/blender_3D_scatter_plot-main/test_data/test.tsv",file_out_dir="/Users/rmulqueen",file_out_name="test")
-
-
-###################################################################
-###################OLD#########################################
-#def make_master_sphere_and_shader():
-#    """Generate a master object and shader to manipulate and parent for data points."""
-#    #initialize an object, a sphere, for our data points.
-#    if "Sphere" not in [i.name for i in list(bpy.data.objects)]:
-#        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05,segments=64, ring_count=32) #higher segments and ring_counts will make a smoother sphere, but I dont think its necessary
-#    obj=bpy.data.objects["Sphere"]
-#    """Set up master shader (named mymat) to be used on all data points."""
-#    #set up a master shader material
-#    if "mymat" not in [i.name for i in list(bpy.data.materials)]:
-#        bpy.data.materials.new(name='mymat')
-#    mat = bpy.data.materials["mymat"]
-#    mat.use_nodes = True #use node trees, these can be seen by switching a panel to the shader editor if you want. It will look like the above shader, just not nicely placed.
-#    mat_nodes = mat.node_tree.nodes
-#    mat_links = mat.node_tree.links
-#    node_to_delete =  mat.node_tree.nodes['Principled BSDF'] #Get the node in its node tree (replace the name below)
-#    mat.node_tree.nodes.remove( node_to_delete ) #Remove it
-#    #add all the nodes, using col_node as variable of each node as it is being made. then using that to modify default value fields
-#    col_node=mat_nodes.new('ShaderNodeRGB')
-#    col_node=mat_nodes.new('ShaderNodeFresnel')
-#    mat.node_tree.nodes['Fresnel'].inputs[0].default_value = 1.33
-#    col_node=mat_nodes.new('ShaderNodeHueSaturation')
-#    mat.node_tree.nodes["Hue Saturation Value"].inputs[0].default_value = 1
-#    mat.node_tree.nodes["Hue Saturation Value"].inputs[1].default_value = 0.7
-#    mat.node_tree.nodes["Hue Saturation Value"].inputs[2].default_value = 2
-#    mat.node_tree.nodes["Hue Saturation Value"].inputs[3].default_value = 0
-#    col_node=mat_nodes.new('ShaderNodeMath')
-#    mat.node_tree.nodes["Math"].operation = 'MULTIPLY'
-#    col_node=mat_nodes.new('ShaderNodeBsdfRefraction')
-#    mat.node_tree.nodes["Refraction BSDF"].inputs[1].default_value = 1
-#    col_node=mat_nodes.new('ShaderNodeBsdfGlossy')
-#    mat.node_tree.nodes["Glossy BSDF"].inputs[1].default_value = 1
-#    col_node=mat_nodes.new('ShaderNodeHueSaturation')
-#    mat.node_tree.nodes["Hue Saturation Value.001"].inputs[0].default_value = 1
-#    mat.node_tree.nodes["Hue Saturation Value.001"].inputs[1].default_value = 0.4
-#    mat.node_tree.nodes["Hue Saturation Value.001"].inputs[2].default_value = 2
-#    col_node=mat_nodes.new('ShaderNodeMixShader')
-#    col_node=mat_nodes.new('ShaderNodeVolumeAbsorption')
-#    mat.node_tree.nodes["Volume Absorption"].inputs[1].default_value = 0.3
-#    col_node=mat_nodes.new('ShaderNodeBsdfTranslucent')
-#    col_node=mat_nodes.new('ShaderNodeLightPath')
-#    col_node=mat_nodes.new('ShaderNodeMixShader')
-#    #build node tree links (going from left most inputs)
-#    #sorry this is a monstrosity
-#    mat_links.new(mat.node_tree.nodes['RGB'].outputs[0], mat.node_tree.nodes["Hue Saturation Value"].inputs[4])
-#    mat_links.new(mat.node_tree.nodes['RGB'].outputs[0], mat.node_tree.nodes["Hue Saturation Value.001"].inputs[4])
-#    mat_links.new(mat.node_tree.nodes['RGB'].outputs[0], mat.node_tree.nodes["Volume Absorption"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes['Fresnel'].outputs[0], mat.node_tree.nodes["Math"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes['Hue Saturation Value'].outputs[0], mat.node_tree.nodes["Refraction BSDF"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes['Hue Saturation Value'].outputs[0], mat.node_tree.nodes["Glossy BSDF"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes["Math"].outputs[0], mat.node_tree.nodes["Mix Shader"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes["Refraction BSDF"].outputs[0], mat.node_tree.nodes["Mix Shader"].inputs[1])
-#    mat_links.new(mat.node_tree.nodes["Glossy BSDF"].outputs[0], mat.node_tree.nodes["Mix Shader"].inputs[2])
-#    mat_links.new(mat.node_tree.nodes["Hue Saturation Value.001"].outputs[0], mat.node_tree.nodes["Translucent BSDF"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes["Volume Absorption"].outputs[0], mat.node_tree.nodes["Material Output"].inputs[1])
-#    mat_links.new(mat.node_tree.nodes["Translucent BSDF"].outputs[0], mat.node_tree.nodes["Mix Shader.001"].inputs[2])
-#    mat_links.new(mat.node_tree.nodes["Mix Shader"].outputs[0], mat.node_tree.nodes["Mix Shader.001"].inputs[1])
-#    mat_links.new(mat.node_tree.nodes["Light Path"].outputs[1], mat.node_tree.nodes["Mix Shader.001"].inputs[0])
-#    mat_links.new(mat.node_tree.nodes["Mix Shader.001"].outputs[0], mat.node_tree.nodes["Material Output"].inputs[0])
-
-
-#########################
-
-
-
-
-#    # scene=bpy.context.scene   #finally ready to start reading in our data
-#    # #set up a material per hex color, name as annotation
-#    # #this is looping through the file, grabbing the unique clusters and there color codes, then making a dictionary for look up later
-#    # start = time.time()
-#    # annot={}
-#    # for line in tabraw[1:]:
-#    #     line=line.replace('\n','')
-#    #     l=line.split('\t')
-#    #     if l[0] not in annot:
-#    #         hexcode=l[5].lstrip("#")
-#    #         rgb=[int(hexcode[i:i+2], 16) for i in (0, 2, 4)]
-#    #         r=float(rgb[0])/255 #color of spheres, blender uses 0-1 scale
-#    #         g=float(rgb[1])/255
-#    #         b=float(rgb[2])/255
-#    #         clust=str(l[0])
-#    #         annot[clust]=[r,g,b]
-#    # end = time.time()
-#    # print(end - start)
-#    # #make a custom material shader for each annotation (just changing color)
-#    # #this copies the material shader we set up earlier, and then changes the input color
-#    # master_sphere={} #make a dictionary look up for copying master spheres
-#    # master_mat=source_mat = bpy.data.materials["mymat"]
-#    # for i in annot.keys():
-#    #     copied_mat = master_mat.copy()
-#    #     copied_mat.name=i
-#    #     bpy.data.materials[i].node_tree.nodes["RGB"].outputs[0].default_value[0]=annot[i][0]
-#    #     bpy.data.materials[i].node_tree.nodes["RGB"].outputs[0].default_value[1]=annot[i][1]
-#    #     bpy.data.materials[i].node_tree.nodes["RGB"].outputs[0].default_value[2]=annot[i][2]
-#    # for i in annot.keys(): #make a custom collection for each annotation. this makes a "master sphere" to link for each cluster also
-#    #     collection = bpy.data.collections.new(i) #make new collection
-#    #     bpy.context.scene.collection.children.link(collection) #link new collection
-#    #     mat = bpy.data.materials.get(i) #set material properties of collection
-#    #     name=str(i)+"_master" #make name of master sphere
-#    #     new_obj = bpy.data.objects.new(name, scene.objects.get("Sphere").data) #make a new copy
-#    #     new_obj.data = scene.objects.get("Sphere").data.copy()
-#    #     bpy.data.collections[i].objects.link(new_obj) #link new object to collection
-#    #     new_obj.data.materials.append(mat) #add material
-#    #     bpy.data.objects[name].hide_render = True # hide masters
-#    #     bpy.data.objects[name].hide_viewport=True
-#    # for i in annot.keys():
-#    #     master_sphere[i]=scene.objects.get(i+"_master").data
-#    #     n=1000 #number of data points to generate per report 
-#    #     in_list = [tabraw[i * n:(i + 1) * n] for i in range((len(tabraw) + n + 1) // n )] 
-#    # for in_dat_list in in_list:
-#    #     start = time.time()
-#    #     out=[add_data_point(in_dat,master_sphere=master_sphere) for in_dat in in_dat_list] 
-#    # end = time.time()
-#    # print(end - start)
-#    # bpy.ops.wm.save_as_mainfile(filepath=file_out_dir+file_out_name+".blend") #save blender file
-#    # bpy.context.scene.render.filepath = file_out_dir+file_out_name+'.png'
-
-
