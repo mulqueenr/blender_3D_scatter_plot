@@ -11,8 +11,6 @@ import numpy
 addon_path=[mod.__file__ for mod in addon_utils.modules() if "blender_3D_scatter_plot" in mod.__file__] #get a list of all add-ons and return this one
 test_data_path = addon_path[0].replace("__init__.py","test_data/test.tsv") #replace init file with test data directory and file
 
-################################ UPDATED v0.2 ###################################################################
-
 
 #use this for import https://github.com/simonbroggi/blender_spreadsheet_import/blob/main/__init__.py
 def set_camera():
@@ -32,6 +30,8 @@ def set_render_and_scene():
   bpy.data.lights["Light"].energy = 10000 # increase light wattage
   bpy.data.lights["Light"].shadow_soft_size= 1
   bpy.data.objects["Light"].location=(5,-5,10) #location and rotation i deteremined manually and just set up here for convenience
+
+################################ UPDATED v1.1 ###################################################################
 
 def read_tsv(file_path):
     '''Read in TSV file, this is from Erindale https://www.youtube.com/watch?v=xWwoWi_vPTg&t=1737s'''
@@ -74,8 +74,6 @@ def create_object(mesh, name):
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
-
-
 
 def set_up_stage():
     """Set up stage by cutting up the default cube vertices and smoothing it."""
