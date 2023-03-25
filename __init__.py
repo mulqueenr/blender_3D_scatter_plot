@@ -2,7 +2,7 @@ bl_info = {
     "name": "3D Scatter Plots",
     "author": "Ryan Mulqueen <RMulqueen@mdanderson.org",
     "version": (1, 1),
-    "blender": (3, 5, 0),
+    "blender": (3, 4, 1),
     "location": "View3D",
     "description": "Adds a menu to upload points for a easy-to-initiate 3D Scatter Plot.",
     "warning": "",

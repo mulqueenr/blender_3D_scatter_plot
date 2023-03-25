@@ -93,12 +93,8 @@ def set_up_stage():
     bpy.ops.object.modifier_add(type='SUBSURF') #make it smooth
     bpy.data.objects["Cube"].modifiers["Subdivision"].render_levels=6
     bpy.data.objects["Cube"].location=(-4,4.3,17.725) #change the location for more dramatic shadows
-
   
-def run_3dscatterplot(
-    file_in,
-    file_out_dir,
-    file_out_name):
+def run_3dscatterplot(file_in,file_out_dir,file_out_name):
     """This is the main function, which wraps all others. Reads in file, assigns space based on file data, and assigns a material per cluster"""
     #Read in file and separate out columns to lists
     #file_in="/Users/rmulqueen/Library/Application Support/Blender/3.4/scripts/addons/blender_3D_scatter_plot-main/test_data/test.tsv"
@@ -109,7 +105,6 @@ def run_3dscatterplot(
     x=[float(i) for i in tsv_column(data=dat,col=2)]
     y=[float(i) for i in tsv_column(data=dat,col=3)]
     z=[float(i) for i in tsv_column(data=dat,col=4)]
-
     #Split out colors to rgb components
     color_in=tsv_column(data=dat,col=5)
     color_in=color_splitter(array_in=color_in)
@@ -123,14 +118,11 @@ def run_3dscatterplot(
          color_in.append(float(g[i]))
          color_in.append(float(b[i]))
          color_in.append(float(a[i]))
-
     set_render_and_scene()   #set up render engine and scene
     set_up_stage()   #set up stage by cutting up the default cube vertices and smoothing it
     set_camera()  #move the camera and rotate
-
     #Instance a new object and add attributes
     mesh = bpy.data.meshes.new(name="csv_data")
-
     mesh.vertices.add(n_points)
     mesh.update() 
     object_name = bpy.path.display_name("Scatterplot")
@@ -138,37 +130,21 @@ def run_3dscatterplot(
     #Set position per vertex
     for i in range(0,n_points-1):
         mesh.vertices[i].co = (x[i],y[i],z[i])
-
     #Set color per vertex
     colattr = bpy.data.meshes[mesh.name].attributes.new("color","FLOAT_COLOR","POINT")
     for i in range(0,n_points-1):
         colattr.data[i].color = [r[i], g[i], b[i], 1]
-
     obj=bpy.data.objects["Scatterplot"]
     #Initiate a geometry nodes modifier
     obj.modifiers.new("make_vertices","NODES")
     geo_nodes=obj.modifiers["make_vertices"]
     #bpy.data.node_groups.new("make_vertices","GeometryNodeTree")
-
-    #Initialize shader nodes
-    mymat=bpy.data.materials.new("scattermat")
-    mymat.use_nodes = True
-    shadernodes = mymat.node_tree.nodes
-    attr_node = shadernodes.new('ShaderNodeAttribute')
-    bsdf_node=shadernodes['Principled BSDF']
-    attr_node.location=(-300,-300) #move points node
-    attr_node.attribute_type = 'INSTANCER'
-    attr_node.attribute_name = "color"
-    mymat.node_tree.links.new(attr_node.outputs['Color'], bsdf_node.inputs['Base Color']) #link input counts to points
-
     #Initialize geometry nodes
     bpy.ops.node.new_geometry_node_group_assign()
     bpy.data.node_groups[0].name="make_vertices"
     geo_nodes.node_group = bpy.data.node_groups["make_vertices"]
-
     #Add group input
-    nodetree=geo_nodes.node_group
-
+    nodetree=geo_nodes.node_group #fix this. doesnt properly initialize nodes
     #Add geo nodes and link
     inNode=nodetree.nodes['Group Input']
     outNode=nodetree.nodes['Group Output']
@@ -176,17 +152,13 @@ def run_3dscatterplot(
     icosnode=nodetree.nodes.new(type="GeometryNodeMeshIcoSphere") #add ico
     icosnode.inputs['Radius'].default_value=0.05
     icosnode.inputs['Subdivisions'].default_value=4
-
     scenetimenode=nodetree.nodes.new(type="GeometryNodeInputSceneTime") #add scene time
     setpositionnode=nodetree.nodes.new(type="GeometryNodeSetPosition") #add set position
     setmaterialnode=nodetree.nodes.new(type="GeometryNodeSetMaterial") #add set material
-    setmaterialnode.inputs['Material'].default_value = bpy.data.materials["scattermat"]
-
     voroninode=nodetree.nodes.new(type="ShaderNodeTexVoronoi") #add voroni texture
     voroninode.voronoi_dimensions = '4D'
     voroninode.inputs['Scale'].default_value = 1
-
-    #add subdivinsion icosphere
+    #add subdivision icosphere
     pointsnode.location=(-100,-300) #move points node
     icosnode.location=(-300,-500)
     scenetimenode.location=(-100,100)
@@ -194,7 +166,6 @@ def run_3dscatterplot(
     setpositionnode.location=(100,100)
     setmaterialnode.location=(300,300)
     outNode.location=(500,100)
-
     bpy.data.node_groups["make_vertices"].nodes["Voronoi Texture"].name
     nodetree.links.new(inNode.outputs['Geometry'], pointsnode.inputs['Points']) #link input counts to points
     nodetree.links.new(icosnode.outputs['Mesh'], pointsnode.inputs['Instance']) #link input positions to points
@@ -204,3 +175,22 @@ def run_3dscatterplot(
     nodetree.links.new(voroninode.outputs['Distance'], setpositionnode.inputs['Offset']) #link random distance to offset to move points
     nodetree.links.new(setpositionnode.outputs['Geometry'], setmaterialnode.inputs['Geometry']) #link input positions to points
     nodetree.links.new(setmaterialnode.outputs['Geometry'], outNode.inputs['Geometry']) #link input positions to points
+    #Initialize shader nodes
+    # Get material
+    mat = bpy.data.materials.get("scattermat")
+    if mat is None:
+        mymat=bpy.data.materials.new("scattermat")     # create material
+    mymat.use_nodes = True
+    # Assign it to object
+    if obj.data.materials:
+        obj.data.materials[0] = mymat    # assign to 1st material slot
+    else:
+        obj.data.materials.append(mymat)     # no slots
+    shadernodes = mymat.node_tree.nodes
+    attr_node = shadernodes.new('ShaderNodeAttribute')
+    bsdf_node=shadernodes['Principled BSDF']
+    attr_node.location=(-300,-300) #move points node
+    attr_node.attribute_type = 'INSTANCER'
+    attr_node.attribute_name = "color"
+    mymat.node_tree.links.new(attr_node.outputs['Color'], bsdf_node.inputs['Base Color']) #link input counts to points
+    setmaterialnode.inputs['Material'].default_value = bpy.data.materials["scattermat"] #assign this scattermat material to the geonode attribute
